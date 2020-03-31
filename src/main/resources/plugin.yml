@@ -1,0 +1,10 @@
+name: Akarian
+version: ${project.version}
+main: net.akarian.akarian.Akarian
+prefix: Akarian
+authors: [Austin]
+description: Akarian Core Plugin
+website: akarian.net
+commands:
+  rank:
+    description: Rank management command.
