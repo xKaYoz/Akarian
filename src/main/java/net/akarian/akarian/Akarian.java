@@ -8,9 +8,12 @@ import net.akarian.akarian.ranks.commands.RankCommand;
 import net.akarian.akarian.ranks.commands.RankCommandManager;
 import net.akarian.akarian.users.User;
 import net.akarian.akarian.users.UserManager;
+import net.akarian.akarian.users.commands.UserCommand;
+import net.akarian.akarian.users.commands.UserCommandManager;
 import net.akarian.akarian.users.userevents.UserRegisterEvent;
 import net.akarian.akarian.users.userevents.UserUnregisterEvent;
 import net.akarian.akarian.utils.Chat;
+import net.akarian.akarian.utils.PAPISupport;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -43,7 +46,9 @@ public final class Akarian extends JavaPlugin {
         registerEvents();
         registerCommands();
 
-        Chat.log("Loaded " + (RankCommandManager.getInstance().getCommands().size()) + " commands", true);
+        new PAPISupport().register();
+
+        Chat.log("Loaded " + (RankCommandManager.getInstance().getCommands().size() + UserCommandManager.getInstance().getCommands().size()) + " commands", true);
 
         Chat.log("Started up in " + (System.currentTimeMillis() - start) + "ms", true);
 
@@ -69,7 +74,7 @@ public final class Akarian extends JavaPlugin {
         }
 
         if (RankManager.getRank("Member") == null) {
-            new Rank(UUID.randomUUID(), "Member", "&7&lMember").saveRank();
+            new Rank(UUID.randomUUID(), "Member", "MAIN", "&7&lMember").saveRank();
         }
 
         Chat.log("Loaded " + ranks + " ranks in " + (System.currentTimeMillis() - start) + "ms", true);
@@ -109,6 +114,7 @@ public final class Akarian extends JavaPlugin {
         for (User u : UserManager.getUsers()) {
             accounts++;
             u.saveUser();
+            u.unloadPermissions();
         }
 
         Chat.log("Saved " + accounts + " accounts in " + (System.currentTimeMillis() - start) + "ms", true);
@@ -131,5 +137,6 @@ public final class Akarian extends JavaPlugin {
 
     private void registerCommands() {
         this.getCommand("rank").setExecutor(new RankCommand());
+        this.getCommand("user").setExecutor(new UserCommand());
     }
 }

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import net.akarian.akarian.Akarian;
 import net.akarian.akarian.mysql.MySQLManager;
+import net.akarian.akarian.users.User;
+import org.bukkit.permissions.PermissionAttachment;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,23 +18,27 @@ public class Rank {
 
     @Getter
     @Setter
-    UUID UUID;
+    private UUID UUID;
     @Getter
     @Setter
-    String prefix;
+    private String prefix;
     @Getter
     @Setter
-    String name;
+    private String ladder;
     @Getter
     @Setter
-    Rank parent;
+    private String name;
     @Getter
     @Setter
-    List<String> permissions = new ArrayList<>();
+    private Rank parent;
+    @Getter
+    @Setter
+    private List<String> permissions = new ArrayList<>();
 
-    public Rank(UUID uuid, String name, String prefix) {
+    public Rank(UUID uuid, String name, String ladder, String prefix) {
         this.UUID = uuid;
         this.name = name;
+        this.ladder = ladder.toUpperCase();
         this.prefix = prefix;
 
         RankManager.registerRank(this);
@@ -51,7 +57,17 @@ public class Rank {
 
             while (rs.next()) {
 
-                Rank rank = new Rank(java.util.UUID.fromString(rs.getString(1)), rs.getString(2), rs.getString(3));
+                Rank rank = new Rank(java.util.UUID.fromString(rs.getString(1)), rs.getString(2), rs.getString(3), rs.getString(4));
+
+                PreparedStatement permissions = sql.getConnection().prepareStatement("SELECT * FROM " + sql.getRanksTable() + "_permissions WHERE UUID=?");
+
+                permissions.setString(1, uuid.toString());
+
+                ResultSet ps = permissions.executeQuery();
+
+                while (ps.next()) {
+                    rank.getPermissions().add(ps.getString(2));
+                }
 
                 return rank;
 
@@ -64,9 +80,40 @@ public class Rank {
         return null;
     }
 
+    public void removePermission(String permission) {
+        this.permissions.remove(permission);
+        MySQLManager sql = Akarian.getInstance().getMySQL();
+
+        for (User user : RankManager.getUsersInRank(this)) {
+
+            PermissionAttachment attachment = user.getAttachment();
+            attachment.unsetPermission(permission);
+
+        }
+
+        try {
+            PreparedStatement delete = sql.getConnection().prepareStatement("DELETE FROM " + sql.getRanksTable() + "_permissions WHERE UUID=?");
+
+            delete.setString(1, getUUID().toString());
+
+            delete.executeUpdate();
+            delete.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void addPermission(String permission) {
         this.permissions.add(permission);
-        //TODO Update all users with this rank
+
+        for (User user : RankManager.getUsersInRank(this)) {
+
+            PermissionAttachment attachment = user.getAttachment();
+            attachment.setPermission(permission, true);
+
+        }
 
         MySQLManager sql = Akarian.getInstance().getMySQL();
 
@@ -106,16 +153,17 @@ public class Rank {
             ResultSet rs = get.executeQuery();
 
             while (rs.next()) {
-                PreparedStatement update = sql.getConnection().prepareStatement("UPDATE " + sql.getRanksTable() + " SET NAME=?, PREFIX=?, PARENT=? WHERE UUID=?");
+                PreparedStatement update = sql.getConnection().prepareStatement("UPDATE " + sql.getRanksTable() + " SET NAME=?, LADDER=?, PREFIX=?, PARENT=? WHERE UUID=?");
 
                 update.setString(1, name);
-                update.setString(2, prefix);
+                update.setString(2, ladder);
+                update.setString(3, prefix);
                 if (parent == null) {
-                    update.setString(3, null);
+                    update.setString(4, null);
                 } else {
-                    update.setString(3, parent.getUUID().toString());
+                    update.setString(4, parent.getUUID().toString());
                 }
-                update.setString(4, getUUID().toString());
+                update.setString(5, getUUID().toString());
 
                 update.executeUpdate();
                 update.close();
@@ -131,15 +179,16 @@ public class Rank {
         }
 
         try {
-            PreparedStatement insert = sql.getConnection().prepareStatement("INSERT INTO " + sql.getRanksTable() + " (UUID,NAME,PREFIX,PARENT) VALUES (?,?,?,?)");
+            PreparedStatement insert = sql.getConnection().prepareStatement("INSERT INTO " + sql.getRanksTable() + " (UUID,NAME,LADDER,PREFIX,PARENT) VALUES (?,?,?,?,?)");
 
             insert.setString(1, getUUID().toString());
             insert.setString(2, name);
-            insert.setString(3, prefix);
+            insert.setString(3, ladder);
+            insert.setString(4, prefix);
             if (parent == null) {
-                insert.setString(4, null);
+                insert.setString(5, null);
             } else {
-                insert.setString(4, parent.getUUID().toString());
+                insert.setString(5, parent.getUUID().toString());
             }
 
             insert.executeUpdate();

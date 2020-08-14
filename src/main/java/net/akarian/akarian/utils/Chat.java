@@ -30,13 +30,10 @@ public class Chat {
     }
 
     public static ArrayList<String> formatList(List<String> list) {
-
         ArrayList<String> formatted = new ArrayList<>();
-
         for (String str : list) {
             formatted.add(format(str));
         }
-
         return formatted;
     }
 

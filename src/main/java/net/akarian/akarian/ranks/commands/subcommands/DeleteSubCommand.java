@@ -7,6 +7,7 @@ import net.akarian.akarian.ranks.RankManager;
 import net.akarian.akarian.users.User;
 import net.akarian.akarian.utils.AkarianCommand;
 import net.akarian.akarian.utils.Chat;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import java.sql.PreparedStatement;
@@ -60,7 +61,10 @@ public class DeleteSubCommand extends AkarianCommand {
         List<User> users = RankManager.getUsersInRank(rank);
 
         for (User u : users) {
-            Chat.sendMessage(sender, "Your rank has been deleted. You have been set to the Member rank.");
+            if (u.getMainRank() == rank) u.setMainRank(RankManager.getRank("Member"));
+            if (u.getPrisonRank() == rank) u.setPrisonRank(RankManager.getRank("A"));
+            if (u.getDonatorRank() == rank) u.setDonatorRank(null);
+            Chat.sendMessage(Bukkit.getPlayer(u.getUuid()), "Your rank has been deleted. You have been set to the default rank.");
         }
 
         Chat.sendMessage(sender, "You have deleted the rank &e" + rank.getName() + "&7. Had &e" + users.size() + " user" + (users.size() == 1 ? "" : "s") + "&7.");

@@ -53,8 +53,8 @@ public class MySQLManager {
             Chat.sendRawMessage(sender, "");
 
             s.executeUpdate("CREATE TABLE IF NOT EXISTS " + usersTable + " (UUID varchar(255) NOT NULL PRIMARY KEY, MAIN_RANK varchar(255), PRISON_RANK varchar(255), DONATOR_RANK varchar(255), TOKENS BIGINT)");
-            s.executeUpdate("CREATE TABLE IF NOT EXISTS " + ranksTable + " (UUID varchar(255) NOT NULL PRIMARY KEY, NAME varchar(255), PREFIX varchar(255), PARENT varchar(255))");
-            s.executeUpdate("CREATE TABLE IF NOT EXISTS " + ranksTable + "_permissions (UUID varchar(255) NOT NULL PRIMARY KEY, PERMISSION varchar(255))");
+            s.executeUpdate("CREATE TABLE IF NOT EXISTS " + ranksTable + " (UUID varchar(255) NOT NULL PRIMARY KEY, NAME varchar(255), LADDER varchar(255), PREFIX varchar(255), PARENT varchar(255))");
+            s.executeUpdate("CREATE TABLE IF NOT EXISTS " + ranksTable + "_permissions (UUID varchar(255) NOT NULL, PERMISSION varchar(255))");
 
             Chat.sendRawMessage(sender, "&aAkarian has updated all tables. The plugin will now enable.");
             Chat.sendRawMessage(sender, "");

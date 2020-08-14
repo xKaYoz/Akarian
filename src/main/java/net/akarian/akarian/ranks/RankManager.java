@@ -40,7 +40,11 @@ public class RankManager {
     public static List<User> getUsersInRank(Rank rank) {
         List<User> users = new ArrayList<>();
         for (User u : UserManager.getUsers()) {
-            if (u.getMainRank() == rank || u.getPrisonRank() == rank || u.getDonatorRank() == rank) {
+            if (u.getMainRank() != null && u.getMainRank() == rank) {
+                users.add(u);
+            } else if (u.getPrisonRank() != null && u.getPrisonRank() == rank) {
+                users.add(u);
+            } else if (u.getDonatorRank() != null && u.getDonatorRank() == rank) {
                 users.add(u);
             }
         }

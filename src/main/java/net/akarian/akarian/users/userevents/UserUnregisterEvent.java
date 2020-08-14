@@ -15,6 +15,10 @@ public class UserUnregisterEvent implements Listener {
         Player p = e.getPlayer();
         User u = UserManager.getUser(p.getUniqueId());
 
+        assert u != null;
+
+        u.unloadPermissions();
+
         u.saveUser();
         UserManager.unRegisterUser(u);
 

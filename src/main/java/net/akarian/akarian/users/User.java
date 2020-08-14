@@ -5,7 +5,10 @@ import lombok.Setter;
 import net.akarian.akarian.Akarian;
 import net.akarian.akarian.mysql.MySQLManager;
 import net.akarian.akarian.ranks.Rank;
+import net.akarian.akarian.ranks.RankManager;
 import net.akarian.akarian.utils.Chat;
+import org.bukkit.Bukkit;
+import org.bukkit.permissions.PermissionAttachment;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,19 +18,27 @@ import java.util.UUID;
 public class User {
 
     @Getter
-    public UUID uuid;
+    private UUID uuid;
 
     @Getter
     @Setter
-    public Rank mainRank;
+    private Rank mainRank;
 
     @Getter
     @Setter
-    public Rank prisonRank;
+    private Rank prisonRank;
 
     @Getter
     @Setter
-    public Rank donatorRank;
+    private Rank donatorRank;
+
+    @Getter
+    @Setter
+    private int tokens;
+
+    @Getter
+    @Setter
+    private PermissionAttachment attachment;
 
     public User() {
     }
@@ -35,7 +46,29 @@ public class User {
     public User(UUID uuid) {
         this.uuid = uuid;
 
+        attachment = Bukkit.getPlayer(uuid).addAttachment(Akarian.getInstance());
+
+        loadPermissions();
+
         UserManager.registerUser(this);
+
+    }
+
+    public void loadPermissions() {
+
+        if (mainRank != null) {
+            for (String s : mainRank.getPermissions()) {
+                attachment.setPermission(s, true);
+            }
+        }
+
+    }
+
+    public void unloadPermissions() {
+
+        for (String s : attachment.getPermissions().keySet()) {
+            attachment.unsetPermission(s);
+        }
 
     }
 
@@ -44,7 +77,6 @@ public class User {
         MySQLManager sql = Akarian.getInstance().getMySQL();
 
         try {
-            long start = System.currentTimeMillis();
             PreparedStatement statement = sql.getConnection().prepareStatement("SELECT * FROM " + sql.getUsersTable() + " WHERE UUID=?");
 
             statement.setString(1, uuid.toString());
@@ -56,11 +88,34 @@ public class User {
                 User user = new User(uuid);
 
                 if (rs.getString(2) != null) {
+                    user.setMainRank(RankManager.getRank(UUID.fromString(rs.getString(2))));
 
-                    //Clan clan = ClanManager.getClan(UUID.fromString(rs.getString(2)));
+                    for (String permission : user.getMainRank().getPermissions()) {
+                        user.getAttachment().setPermission(permission, true);
+                    }
+                } else {
+                    user.setMainRank(RankManager.getRank("Member"));
 
-                    //user.setClan(clan);
+                    for (String permission : user.getMainRank().getPermissions()) {
+                        user.getAttachment().setPermission(permission, true);
+                    }
                 }
+                if (rs.getString(3) != null) {
+                    user.setPrisonRank(RankManager.getRank(UUID.fromString(rs.getString(3))));
+
+                    for (String permission : user.getPrisonRank().getPermissions()) {
+                        user.getAttachment().setPermission(permission, true);
+                    }
+                }
+                if (rs.getString(4) != null) {
+                    user.setDonatorRank(RankManager.getRank(UUID.fromString(rs.getString(4))));
+
+                    for (String permission : user.getDonatorRank().getPermissions()) {
+                        user.getAttachment().setPermission(permission, true);
+                    }
+                }
+
+                user.setTokens(rs.getInt(5));
 
                 rs.close();
 
@@ -71,7 +126,6 @@ public class User {
             e.printStackTrace();
             return null;
         }
-
 
         try {
 

@@ -8,3 +8,5 @@ website: akarian.net
 commands:
   rank:
     description: Rank management command.
+  user:
+    description: User management command.
